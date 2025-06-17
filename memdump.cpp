@@ -8,7 +8,7 @@ int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        std::puts("Usage: memdump <file>");
+        std::puts("Usage: memdump \"STRING\"");
         return 1;
     }
 
