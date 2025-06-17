@@ -12,9 +12,17 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    printf("std::string version:\n");
     std::string str;
     memdump(str, argv[1], strlen(argv[1]));
     printf("%s\n", str.c_str());
+
+#ifdef _WIN32
+    printf("std::wstring version:\n");
+    std::wstring wstr;
+    memdump(wstr, argv[1], strlen(argv[1]));
+    wprintf(L"%ls\n", wstr.c_str());
+#endif
 
     return 0;
 }

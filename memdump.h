@@ -25,7 +25,23 @@
     (buf)[8] = 0; \
 } while (0)
 
-struct MEMDUMP_SETTINGS
+template <typename T_STRING>
+inline void memdump_add_char(T_STRING& str, char ch)
+{
+    str += ch;
+}
+
+template <typename T_STRING>
+inline void memdump_add_string(T_STRING& str, const char *ptr)
+{
+    while (*ptr)
+    {
+        memdump_add_char(str, *ptr);
+        ++ptr;
+    }
+}
+
+struct memdump_settings_t
 {
     size_t addr_base;
     size_t column;
@@ -33,7 +49,7 @@ struct MEMDUMP_SETTINGS
     bool has_header;
     const char *hex;
 
-    MEMDUMP_SETTINGS()
+    memdump_settings_t()
     {
         addr_base = 0;
         column = 16;
@@ -44,7 +60,7 @@ struct MEMDUMP_SETTINGS
 };
 
 template <typename T_STRING>
-void memdump(T_STRING& str, const void *ptr, size_t size, const MEMDUMP_SETTINGS& settings)
+void memdump(T_STRING& str, const void *ptr, size_t size, const memdump_settings_t& settings)
 {
     size_t addr_base = settings.addr_base, column = settings.column;
     bool has_addr = settings.has_addr, has_header = settings.has_header;
@@ -61,33 +77,33 @@ void memdump(T_STRING& str, const void *ptr, size_t size, const MEMDUMP_SETTINGS
     {
         // addr
         if (has_addr)
-            str += "+ADDRESS  ";
+            memdump_add_string(str, "+ADDRESS  ");
 
         // column offsets
         for (i = 0; i < column; ++i)
         {
             if (i < 16)
             {
-                str += '+';
-                str += hex[i & 0xF];
+                memdump_add_char(str, '+');
+                memdump_add_char(str, hex[i & 0xF]);
             }
             else
             {
-                str += hex[i >> 4];
-                str += hex[i & 0xF];
+                memdump_add_char(str, hex[i >> 4]);
+                memdump_add_char(str, hex[i & 0xF]);
             }
-            str += ' ';
+            memdump_add_char(str, ' ');
         }
-        str += ' ';
+        memdump_add_char(str, ' ');
 
         // text offsets
         for (i = 0; i < column; ++i)
         {
-            str += hex[i & 0xF];
+            memdump_add_char(str, hex[i & 0xF]);
         }
 
         // new line
-        str += '\n';
+        memdump_add_char(str, '\n');
     }
 
     // body
@@ -98,8 +114,8 @@ void memdump(T_STRING& str, const void *ptr, size_t size, const MEMDUMP_SETTINGS
         if (has_addr)
         {
             MEMDUMP_DWORD_TO_HEX(buf, addr_base + i, hex);
-            str += buf;
-            str += "  ";
+            memdump_add_string(str, buf);
+            memdump_add_string(str, "  ");
         }
 
         count = (i + column < size) ? column : (size - i);
@@ -108,32 +124,28 @@ void memdump(T_STRING& str, const void *ptr, size_t size, const MEMDUMP_SETTINGS
         for (j = 0; j < count; j++)
         {
             MEMDUMP_BYTE_TO_HEX(buf, pb[i + j], hex);
-            buf[2] = ' ';
-            buf[3] = 0;
-            str += buf;
+            memdump_add_string(str, buf);
+            memdump_add_char(str, ' ');
         }
 
         for (j = 0; j < 3 * (column - count) + 1; ++j)
-            str += ' ';
+            memdump_add_char(str, ' ');
 
         // text
         for (j = 0; j < count; j++)
         {
-            if (isprint(pb[i + j]))
-                str += pb[i + j];
-            else
-                str += '.';
+            memdump_add_char(str, isprint(pb[i + j]) ? pb[i + j] : '.');
         }
 
         // new line
-        str += '\n';
+        memdump_add_char(str, '\n');
     }
 }
 
 template <typename T_STRING>
-void memdump(T_STRING& str, const void *ptr, size_t size)
+inline void memdump(T_STRING& str, const void *ptr, size_t size)
 {
-    MEMDUMP_SETTINGS settings;
+    memdump_settings_t settings;
     memdump(str, ptr, size, settings);
 }
 
